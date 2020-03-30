@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import os, sys
 import zipfile
+import traceback
 
 def help():
     print """Usage: openvpn_gen [-w, -m, -l, -a] client
@@ -191,6 +192,7 @@ try:
         zip.write('/etc/openvpn/clients/'+clientfile,'client.'+('exe' if win =='' else 'dmg'))
 except:
     print "Error creating zip file"
+    print traceback.format_exc()
     sys.exit(0)
 
 print "Done. Written to {0}".format(filename)
