@@ -191,25 +191,25 @@ verb 3 # set verbosity
 
 <ca>
 """
-+fcacrt.read()+
++fcacrt.read()+\
 """
 </ca>
 
 <cert>
 """
-+fccrt.read()+
++fccrt.read()+\
 """
 </cert>
 
 <key>
 """
-+fclk.read()+
++fclk.read()+\
 """
 </key>
 
 <tls-auth>
 """
-+ftak.read()+
++ftak.read()+\
 """
 </tls-auth>
 """.format(win=win,lin=lin,notwin=';' if win == '' else '',client=client,server=server,port=port,proto=proto)
