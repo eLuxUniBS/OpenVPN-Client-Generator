@@ -138,7 +138,7 @@ path_ca_crt='/etc/openvpn/'+args.ca+'/keys/ca.crt'
 fclk = open(path_client_key, "r")
 fccrt = open(path_client_crt, "r")
 ftak =open(path_ta_key, "r")
-fcacrt= ope(path_ca_crt, "r")
+fcacrt= open(path_ca_crt, "r")
 conf = """##############################################
 # OpenVPN Configuration File                 #
 # for connecting to multi-client server.     #
@@ -190,25 +190,25 @@ comp-lzo # add compression
 verb 3 # set verbosity
 
 <ca>
-"""
+""" \
 +fcacrt.read()+\
 """
 </ca>
 
 <cert>
-"""
+""" \
 +fccrt.read()+\
 """
 </cert>
 
 <key>
-"""
+""" \
 +fclk.read()+\
 """
 </key>
 
 <tls-auth>
-"""
+""" \
 +ftak.read()+\
 """
 </tls-auth>
