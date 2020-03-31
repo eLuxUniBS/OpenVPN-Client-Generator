@@ -135,90 +135,19 @@ path_client_key='/etc/openvpn/'+args.ca+'/keys/{0}.key'.format(client)
 path_client_crt='/etc/openvpn/'+args.ca+'/keys/{0}.crt'.format(client)
 path_ta_key='/etc/openvpn/ta.key'
 path_ca_crt='/etc/openvpn/'+args.ca+'/keys/ca.crt'
+path_config_template='./template.conf'
 fclk = open(path_client_key, "r")
 fccrt = open(path_client_crt, "r")
 ftak =open(path_ta_key, "r")
 fcacrt= open(path_ca_crt, "r")
-conf = """##############################################
-# OpenVPN Configuration File                 #
-# for connecting to multi-client server.     #
-# On Windows rename this file so it has an   #
-# .ovpn extension                            #
-##############################################
-
-client
-
-# Needed on Linux
-{lin}script-security 2
-{lin}up /etc/openvpn/update-resolv-conf
-{lin}down /etc/openvpn/update-resolv-conf
-
-# Needed on Windows
-{win}route-method exe
-{win}route-delay 2
-
-# Comment out on Windows
-{notwin}remote-cert-tls server
-
-# network settings
-proto {proto}
-remote {server} {port}
-dev tun
-
-# certificates
-ca ca.crt
-cert {client}.crt
-key {client}.key
-tls-auth ta.key 1
-
-# keep trying to resolve name
-resolv-retry infinite
-
-# don't bind to local address
-nobind
-
-# stay connected and inform server on close
-keepalive 10 120
-explicit-exit-notify 2
-
-# keep everything consistent
-persist-key
-persist-tun
-
-comp-lzo # add compression
-
-verb 3 # set verbosity
-
-<ca>
-""" \
-+fcacrt.read()+\
-"""
-</ca>
-
-<cert>
-""" \
-+fccrt.read()+\
-"""
-</cert>
-
-<key>
-""" \
-+fclk.read()+\
-"""
-</key>
-
-<tls-auth>
-""" \
-+ftak.read()+\
-"""
-</tls-auth>
-"""
-conf=conf.format(win=win,lin=lin,notwin=';' if win == '' else '',client=client,server=server,port=port,proto=proto)
+template=open(path_config_template, "r")
+conf = template.read()
+conf=conf.format(win=win,lin=lin,notwin=';' if win == '' else '',client=client,server=server,port=port,proto=proto, cacrt=fcacrt.read(), clientcrt=fccrt.read(), clientkey=fclk.read())
 fclk.close()
 fccrt.close()
 ftak.close()
 fcacrt.close()
-
+template.close()
 print "Creating zip file"
 try:
     zip = zipfile.ZipFile(filename,'w')
