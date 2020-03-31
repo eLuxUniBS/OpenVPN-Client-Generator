@@ -2,14 +2,17 @@
 import os, sys
 import zipfile
 import traceback
+import argparse
 
+#todo: delete after tests
 def help():
-    print """Usage: openvpn_gen [-w, -m, -l, -a] client
+    print """Usage: openvpn_gen [-w, -m, -l, -a, -ca caDir] client
     --help, -h\tDisplay this help message
     -w\tCreate a Windows bundle
     -m\tCreate a Mac bundle
     -l\tCreate a Linux bundle
     -a\tCreate an Android Bundle
+    -ca\tSpecify the CA directory
 
     client is the name of the key you wish to create. It is also the name you use to revoke a client"""
     confhelp()
@@ -26,15 +29,15 @@ server is mandatory and may be a hostname or ip address
 """
     sys.exit(0)
 
-# check parameters
-try:
-    if sys.argv[1] in ['-h', '--help']:
-        help()
-    if sys.argv[1] not in ['-w', '-m', '-l','-a']:
-        help()
-    client = sys.argv[2]
-except IndexError:
-    help()
+parser = argparse.ArgumentParser(description='A simple utility on top of OpenVPN\'s easy-rsa that creates a zip bundle of all needed files to connect to OpenVPN server for the 3 Major OSes and Android. A sample server configuration is included.')
+parser.add_argument('-ca', metavar='-ca', type=str, nargs='?', help='The certification autority directory, default easy-rsa', default='easy-rsa')
+parser.add_argument('-w', help='Create a Windows bundle', action='store_true')
+parser.add_argument('-m', help='Create a Mac bundle', action='store_true')
+parser.add_argument('-l', help='Create a Linux bundle', action='store_true')
+parser.add_argument('-a', help='Create an Android Bundle', action='store_true')
+parser.add_argument('client', help='is the name of the key you wish to create. It is also the name you use to revoke a client')
+args=parser.parse_args()
+client=args.client
 
 # make sure we are root
 if os.geteuid() != 0:
@@ -74,16 +77,16 @@ print "Using server: {0}, port: {1}, proto: {2}".format(server,port,proto)
     
 # check if files already exists
 print "Checking for previous certificates"
-keycheck = os.path.isfile('/etc/openvpn/easy-rsa/keys/{0}.key'.format(client))
-certcheck = os.path.isfile('/etc/openvpn/easy-rsa/keys/{0}.crt'.format(client))
+keycheck = os.path.isfile('/etc/openvpn/'+args.ca+'/keys/{0}.key'.format(client))
+certcheck = os.path.isfile('/etc/openvpn/'+args.ca+'/keys/{0}.crt'.format(client))
 
 # if not create them
 if not keycheck or not certcheck:
     print "Not found. Creating files"
-    os.system('cd /etc/openvpn/easy-rsa && . ./vars && ./pkitool {0}'.format(client))
+    os.system('cd /etc/openvpn/'+args.ca+' && . ./vars && ./pkitool {0}'.format(client))
 
-    keycheck = os.path.isfile('/etc/openvpn/easy-rsa/keys/{0}.key'.format(client))
-    certcheck = os.path.isfile('/etc/openvpn/easy-rsa/keys/{0}.crt'.format(client))
+    keycheck = os.path.isfile('/etc/openvpn/'+args.ca+'+/keys/{0}.key'.format(client))
+    certcheck = os.path.isfile('/etc/openvpn/'+args.ca+'+/keys/{0}.crt'.format(client))
     # if they still don't exist, quit
     if not keycheck or not certcheck:
         print 'Error creating certificate files!'
@@ -91,7 +94,7 @@ else:
     print "certificates found!"
 
 # set parameters based on OS
-if sys.argv[1] == '-w':
+if args.w:
     print "Creating Windows bundle"
     filename = '{client}.{os}.zip'.format(client=client,os="win")
     win = ''
@@ -100,7 +103,7 @@ if sys.argv[1] == '-w':
         clientfile = 'win.exe'
     else:
         clientfile = None
-elif sys.argv[1] == '-m':
+elif args.m:
     filename = '{client}.{os}.zip'.format(client=client,os="mac")
     print "Creating Mac bundle"
     win = lin = ';'
@@ -108,13 +111,13 @@ elif sys.argv[1] == '-m':
         clientfile = 'mac.dmg'
     else:
         clientfile = None
-elif sys.argv[1] == '-l':
+elif args.l:
     filename = '{client}.{os}.zip'.format(client=client,os="lin")
     print "Creating Linux bundle"
     win = ';'
     lin = ''
     clientfile = None
-elif sys.argv[1] == '-a':
+elif args.a:
     filename = '{client}.{os}.zip'.format(client=client,os="and")
     print "Creating Android bundle"
     win = ';'
@@ -183,10 +186,10 @@ verb 3 # set verbosity
 print "Creating zip file"
 try:
     zip = zipfile.ZipFile(filename,'w')
-    zip.write('/etc/openvpn/easy-rsa/keys/{0}.key'.format(client),'{client}.key'.format(client=client))
-    zip.write('/etc/openvpn/easy-rsa/keys/{0}.crt'.format(client),'{client}.crt'.format(client=client))
+    zip.write('/etc/openvpn/'+args.ca+'/keys/{0}.key'.format(client),'{client}.key'.format(client=client))
+    zip.write('/etc/openvpn/'+args.ca+'/keys/{0}.crt'.format(client),'{client}.crt'.format(client=client))
     zip.write('/etc/openvpn/ta.key','ta.key')
-    zip.write('/etc/openvpn/ca.crt','ca.crt')
+    zip.write('/etc/openvpn/'+args.ca+'/keys/ca.crt','ca.crt')
     zip.writestr('client.'+('ovpn' if win =='' else 'conf'),conf)
     if clientfile is not None:
         zip.write('/etc/openvpn/clients/'+clientfile,'client.'+('exe' if win =='' else 'dmg'))
