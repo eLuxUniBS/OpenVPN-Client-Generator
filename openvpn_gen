@@ -131,10 +131,10 @@ if os.path.isfile(filename):
         print "Not overwriting. Exiting."
         sys.exit(0)
 
-path_client_key='/etc/openvpn/'+args.ca+'/keys/{0}.key'.format(client),'{client}.key'.format(client=client)
-path_client_crt='/etc/openvpn/'+args.ca+'/keys/{0}.crt'.format(client),'{client}.crt'.format(client=client)
-path_ta_key='/etc/openvpn/ta.key','ta.key'
-path_ca_crt='/etc/openvpn/'+args.ca+'/keys/ca.crt','ca.crt'
+path_client_key='/etc/openvpn/'+args.ca+'/keys/{0}.key'.format(client)
+path_client_crt='/etc/openvpn/'+args.ca+'/keys/{0}.crt'.format(client)
+path_ta_key='/etc/openvpn/ta.key'
+path_ca_crt='/etc/openvpn/'+args.ca+'/keys/ca.crt'
 fclk = open(path_client_key, "r")
 fccrt = open(path_client_crt, "r")
 ftak =open(path_ta_key, "r")
@@ -221,10 +221,10 @@ fcacrt.close()
 print "Creating zip file"
 try:
     zip = zipfile.ZipFile(filename,'w')
-    zip.write(path_client_key)
-    zip.write(path_client_crt)
-    zip.write(path_ta_key)
-    zip.write(path_ca_crt)
+    zip.write(path_client_key,'{client}.key'.format(client=client))
+    zip.write(path_client_crt,,'{client}.crt'.format(client=client))
+    zip.write(path_ta_key,'ta.key')
+    zip.write(path_ca_crt,'ca.crt')
     zip.writestr('client.'+('ovpn' if win =='' else 'conf'),conf)
     if clientfile is not None:
         zip.write('/etc/openvpn/clients/'+clientfile,'client.'+('exe' if win =='' else 'dmg'))
