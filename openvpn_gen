@@ -222,7 +222,7 @@ print "Creating zip file"
 try:
     zip = zipfile.ZipFile(filename,'w')
     zip.write(path_client_key,'{client}.key'.format(client=client))
-    zip.write(path_client_crt,,'{client}.crt'.format(client=client))
+    zip.write(path_client_crt,'{client}.crt'.format(client=client))
     zip.write(path_ta_key,'ta.key')
     zip.write(path_ca_crt,'ca.crt')
     zip.writestr('client.'+('ovpn' if win =='' else 'conf'),conf)
