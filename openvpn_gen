@@ -74,7 +74,7 @@ else:
         confhelp()
 
 print "Using server: {0}, port: {1}, proto: {2}".format(server,port,proto)
-    
+
 # check if files already exists
 print "Checking for previous certificates"
 keycheck = os.path.isfile('/etc/openvpn/'+args.ca+'/keys/{0}.key'.format(client))
@@ -131,7 +131,14 @@ if os.path.isfile(filename):
         print "Not overwriting. Exiting."
         sys.exit(0)
 
-
+path_client_key='/etc/openvpn/'+args.ca+'/keys/{0}.key'.format(client),'{client}.key'.format(client=client)
+path_client_crt='/etc/openvpn/'+args.ca+'/keys/{0}.crt'.format(client),'{client}.crt'.format(client=client)
+path_ta_key='/etc/openvpn/ta.key','ta.key'
+path_ca_crt='/etc/openvpn/'+args.ca+'/keys/ca.crt','ca.crt'
+fclk = open(path_client_key, "r")
+fccrt = open(path_client_crt, "r")
+ftak =open(path_ta_key, "r")
+fcacrt= ope(path_ca_crt, "r")
 conf = """##############################################
 # OpenVPN Configuration File                 #
 # for connecting to multi-client server.     #
@@ -154,8 +161,8 @@ client
 {notwin}remote-cert-tls server
 
 # network settings
-proto {proto} 
-remote {server} {port} 
+proto {proto}
+remote {server} {port}
 dev tap
 
 # certificates
@@ -181,15 +188,43 @@ persist-tun
 comp-lzo # add compression
 
 verb 3 # set verbosity
+
+<ca>
+"""
++fcacrt.read()+
+"""
+</ca>
+
+<cert>
+"""
++fccrt.read()+
+"""
+</cert>
+
+<key>
+"""
++fclk.read()+
+"""
+</key>
+
+<tls-auth>
+"""
++ftak.read()+
+"""
+</tls-auth>
 """.format(win=win,lin=lin,notwin=';' if win == '' else '',client=client,server=server,port=port,proto=proto)
+fclk.close()
+fccrt.close()
+ftak.close()
+fcacrt=.close()
 
 print "Creating zip file"
 try:
     zip = zipfile.ZipFile(filename,'w')
-    zip.write('/etc/openvpn/'+args.ca+'/keys/{0}.key'.format(client),'{client}.key'.format(client=client))
-    zip.write('/etc/openvpn/'+args.ca+'/keys/{0}.crt'.format(client),'{client}.crt'.format(client=client))
-    zip.write('/etc/openvpn/ta.key','ta.key')
-    zip.write('/etc/openvpn/'+args.ca+'/keys/ca.crt','ca.crt')
+    zip.write(path_client_key)
+    zip.write(path_client_crt)
+    zip.write(path_ta_key)
+    zip.write(path_ca_crt)
     zip.writestr('client.'+('ovpn' if win =='' else 'conf'),conf)
     if clientfile is not None:
         zip.write('/etc/openvpn/clients/'+clientfile,'client.'+('exe' if win =='' else 'dmg'))
